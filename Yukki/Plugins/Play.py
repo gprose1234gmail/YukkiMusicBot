@@ -2,7 +2,7 @@ import asyncio
 from os import path
 
 from pyrogram import filters
-from pyrogram.types import (InlineKeyboardMarkup, InputMediaPhoto, Message,
+from pyrogram.types import (InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, Message,
                             Voice)
 from youtube_search import YoutubeSearch
 
@@ -24,8 +24,18 @@ from Yukki.Utilities.url import get_url
 from Yukki.Utilities.youtube import (get_yt_info_id, get_yt_info_query,
                                      get_yt_info_query_slider)
 
+from pyrogram.errors import UserAlreadyParticipant
+from pyrogram.errors import UserNotParticipant, ChatAdminRequired, UsernameNotOccupied
+
 loop = asyncio.get_event_loop()
 
+JOIN_ASAP = f"⛔️** Access Denied **⛔️\n\n🙋‍♂️ Hey There , You Must Join @TamilBots Telegram Channel To Use This BOT. So, Please Join it & Try Again🤗. Thank You 🤝"
+
+FSUBB = InlineKeyboardMarkup(
+        [[
+        InlineKeyboardButton(text="TamilBots ♻️", url=f"https://t.me/TamilBots") 
+        ]]
+    )
 
 @app.on_message(
     filters.command(["play", f"play@{BOT_USERNAME}"]) & filters.group
@@ -34,6 +44,13 @@ loop = asyncio.get_event_loop()
 @PermissionCheck
 @AssistantAdd
 async def play(_, message: Message):
+    try:
+        await message._client.get_chat_member(int("-1001359080430"), message.from_user.id)
+    except UserNotParticipant:
+        await message.reply_text(
+        text=JOIN_ASAP, disable_web_page_preview=True, reply_markup=FSUBB
+    )
+        return   
     await message.delete()
     if message.chat.id not in db_mem:
         db_mem[message.chat.id] = {}
@@ -116,7 +133,7 @@ async def play(_, message: Message):
                 reply_markup=InlineKeyboardMarkup(buttons),
             )
             return
-        mystic = await message.reply_text("🔍 **Searching**...")
+        mystic = await message.reply_text("🔎 **Searching**...")
         query = message.text.split(None, 1)[1]
         (
             title,
@@ -161,7 +178,7 @@ async def startyuplay(_, CallbackQuery):
         )
     await CallbackQuery.answer(f"Processing:- {title[:20]}", show_alert=True)
     mystic = await CallbackQuery.message.reply_text(
-        f"**{MUSIC_BOT_NAME} Downloader**\n\n**Title:** {title[:50]}\n\n0% ▓▓▓▓▓▓▓▓▓▓▓▓ 100%"
+        f"**{MUSIC_BOT_NAME} Downloader**\n\n**Title:** {title[:50]}\n\n**0% ▓▓▓▓▓▓▓▓▓▓▓▓ 100%**"
     )
     downloaded_file = await loop.run_in_executor(
         None, download, videoid, mystic, title
